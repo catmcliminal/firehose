@@ -7,7 +7,7 @@ document.head.appendChild(fontLink)
 
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
-const CACHE_KEY = 'firehose-cache-v7'
+const CACHE_KEY = 'firehose-cache-v8'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -63,6 +63,13 @@ const PROXIES = [
   (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   (url) => `https://api.codetabs.com/v1/proxy?quest=${url}`,
 ]
+
+// Stable URL-based ID so gems/hidden/weights survive feed refreshes
+function urlId(url) {
+  let h = 0
+  for (let i = 0; i < url.length; i++) { h = Math.imul(31, h) + url.charCodeAt(i) | 0 }
+  return Math.abs(h).toString(36)
+}
 
 function timeAgo(ts) {
   const mins = Math.floor((Date.now() - ts) / 60000)
@@ -146,7 +153,7 @@ async function fetchFeed(source) {
         const description = get('description') || get('summary') || get('content')
         const categories = [...item.querySelectorAll('category')].map((c) => c.textContent.trim().toLowerCase())
         return {
-          id: `${source.id}-${idx}`,
+          id: link ? urlId(link) : `${source.id}-${idx}`,
           title,
           link,
           pubDate: pubDate ? new Date(pubDate).getTime() : Date.now(),
@@ -279,6 +286,9 @@ async function fetchApproved() {
 
 function submissionToFeedItem(sub) {
   const pubDate = new Date(sub.submitted_at).getTime()
+  const ageHours = (Date.now() - pubDate) / 3600000
+  const recency = Math.max(0, 50 - ageHours * 2)
+  const tierScore = sub.type === 'partner' ? 40 : 30 // partner = tier 2, submitted = tier 3
   return {
     id: `sub-${sub.id}`,
     title: sub.title || sub.url,
@@ -289,7 +299,7 @@ function submissionToFeedItem(sub) {
     sourceType: sub.type || 'submitted',
     categories: [],
     topics: [],
-    trending: 75,
+    trending: Math.round(recency + tierScore),
     submissionType: sub.type || 'submitted',
   }
 }
@@ -647,7 +657,7 @@ export default function App() {
     const redditCount = { count: 0 }
     const maxReddit = Math.ceil(preDisplay.length * 0.3)
     for (const item of preDisplay) {
-      if (item.sourceType === 'reddit') {
+      if (item.sourceType === 'reddit' && !item.isGem) {
         if (redditCount.count < maxReddit) { result.push(item); redditCount.count++ }
       } else {
         result.push(item)
@@ -777,7 +787,7 @@ export default function App() {
           ) : filter === 'submitted' ? (
             <>
               <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 4, fontFamily: "'Outfit', sans-serif" }}>CURATED STORIES</div>
-              <div style={{ color: T.textMuted, fontSize: 12, marginBottom: 20, fontFamily: "'Outfit', sans-serif" }}>Stories hand-picked or submitted by the Firehose community.</div>
+              <div style={{ color: T.textMuted, fontSize: 12, marginBottom: 20, fontFamily: "'Outfit', sans-serif" }}>Stories hand-picked or submitted by humAIn.</div>
               {submittedArchive.length === 0 && <div style={{ color: T.textMuted, fontSize: 14, textAlign: 'center', marginTop: 60, fontFamily: "'Outfit', sans-serif" }}>No curated stories yet.</div>}
               {submittedArchive.map((item) => (
                 <Card key={item.id} item={item} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
