@@ -211,14 +211,14 @@ async function fetchHidden() {
 }
 
 async function hideArticle(item) {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/hidden`, {
-      method: 'POST',
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ article_id: item.id, title: item.title, source: item.source, hidden_at: new Date().toISOString() }),
-    })
-  } catch (e) {}
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/hidden`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ article_id: item.id, title: item.title, source: item.source, hidden_at: new Date().toISOString() }),
+  })
+  if (!res.ok) throw new Error(`hideArticle failed: ${res.status}`)
 }
+
 
 async function fetchWeights() {
   try {
@@ -579,7 +579,8 @@ export default function App() {
 
   async function handleHide(item) {
     setHidden((prev) => [...prev, item.id])
-    await hideArticle(item)
+    try { await hideArticle(item) }
+    catch (e) { console.error(e); setHidden((prev) => prev.filter((id) => id !== item.id)) }
   }
 
   async function handleWeight(item, direction) {
@@ -641,6 +642,7 @@ export default function App() {
   // Approved items < 7 days old go into main feed
   const recentApproved = approvedFeedItems
     .filter((item) => Date.now() - item.pubDate < SEVEN_DAYS)
+    .filter((item) => !hidden.includes(item.id))
     .map((item) => ({ ...item, isGem: false, weight: 0, adjustedScore: item.trending }))
 
   const withMeta = [...rssMeta, ...recentApproved]
