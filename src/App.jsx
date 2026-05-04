@@ -7,7 +7,7 @@ document.head.appendChild(fontLink)
 
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
-const CACHE_KEY = 'firehose-cache-v6'
+const CACHE_KEY = 'firehose-cache-v7'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -54,7 +54,7 @@ const AI_KEYWORDS = [
 
 const T = {
   bg: '#0d0d0d', card: '#141414', border: '#222', orange: '#FF6B35',
-  gem: '#38BDF8', submit: '#34D399', blue: '#4A9EFF', violet: '#8B5CF6', text: '#E8E8E8',
+  gem: '#38BDF8', submit: '#34D399', partner: '#F59E0B', blue: '#4A9EFF', violet: '#8B5CF6', text: '#E8E8E8',
   textMuted: '#666', textDim: '#999', red: '#ff4444',
 }
 
@@ -258,13 +258,40 @@ async function fetchSubmissions() {
   return Array.isArray(data) ? data : []
 }
 
-async function updateSubmissionStatus(id, status) {
+async function updateSubmissionStatus(id, status, type) {
+  const body = { status }
+  if (type) body.type = type
   const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions?id=eq.${id}`, {
     method: 'PATCH',
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`update failed: ${res.status}`)
+}
+
+async function fetchApproved() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions?status=eq.approved&order=submitted_at.desc`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+  })
+  const data = await res.json()
+  return Array.isArray(data) ? data : []
+}
+
+function submissionToFeedItem(sub) {
+  const pubDate = new Date(sub.submitted_at).getTime()
+  return {
+    id: `sub-${sub.id}`,
+    title: sub.title || sub.url,
+    link: sub.url,
+    description: sub.note || '',
+    pubDate,
+    source: sub.type === 'partner' ? 'Partner' : 'Submitted',
+    sourceType: sub.type || 'submitted',
+    categories: [],
+    topics: [],
+    trending: 75,
+    submissionType: sub.type || 'submitted',
+  }
 }
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
@@ -305,7 +332,7 @@ function Ticker({ items }) {
 }
 
 function Card({ item, onToggleGem, onHide, onWeight, isCurator }) {
-  const sourceColor = item.sourceType === 'reddit' ? T.orange : item.sourceType === 'substack' ? T.violet : T.blue
+  const sourceColor = item.sourceType === 'partner' ? T.partner : item.sourceType === 'submitted' ? T.submit : item.sourceType === 'reddit' ? T.orange : item.sourceType === 'substack' ? T.violet : T.blue
   return (
     <div style={{ background: T.card, border: `1px solid ${item.isGem ? T.gem : T.border}`, borderRadius: 8, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -433,6 +460,7 @@ function SubmitModal({ onClose }) {
 }
 
 function QueueCard({ item, onApprove, onReject }) {
+  const [type, setType] = useState('submitted')
   return (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: '20px 24px', marginBottom: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -449,8 +477,19 @@ function QueueCard({ item, onApprove, onReject }) {
       {item.note && (
         <p style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, margin: '0 0 16px', fontFamily: "'Outfit', sans-serif", background: '#1a1a1a', padding: '8px 12px', borderRadius: 4, borderLeft: `3px solid ${T.border}` }}>"{item.note}"</p>
       )}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+        <span style={{ color: T.textMuted, fontSize: 11, fontFamily: "'Outfit', sans-serif", alignSelf: 'center', marginRight: 4 }}>TYPE:</span>
+        {['submitted', 'partner'].map((t) => (
+          <button key={t} onClick={() => setType(t)} style={{
+            background: type === t ? (t === 'partner' ? T.partner + '22' : T.submit + '22') : 'transparent',
+            border: `1px solid ${type === t ? (t === 'partner' ? T.partner : T.submit) : T.border}`,
+            color: type === t ? (t === 'partner' ? T.partner : T.submit) : T.textMuted,
+            borderRadius: 4, padding: '3px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif",
+          }}>{t.toUpperCase()}</button>
+        ))}
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => onApprove(item)} style={{ background: T.submit + '22', border: `1px solid ${T.submit}`, color: T.submit, borderRadius: 4, padding: '5px 16px', fontSize: 11, cursor: 'pointer', fontWeight: 700, letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif" }}>✓ APPROVE</button>
+        <button onClick={() => onApprove(item, type)} style={{ background: T.submit + '22', border: `1px solid ${T.submit}`, color: T.submit, borderRadius: 4, padding: '5px 16px', fontSize: 11, cursor: 'pointer', fontWeight: 700, letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif" }}>✓ APPROVE</button>
         <button onClick={() => onReject(item)} style={{ background: 'transparent', border: `1px solid ${T.border}`, color: T.textMuted, borderRadius: 4, padding: '5px 16px', fontSize: 11, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif" }}>✕ REJECT</button>
       </div>
     </div>
@@ -471,15 +510,17 @@ export default function App() {
   const [queue, setQueue] = useState([])
   const [queueLoading, setQueueLoading] = useState(false)
   const [weights, setWeights] = useState({})
+  const [approved, setApproved] = useState([])
 
   const isCurator = new URLSearchParams(window.location.search).get('curator') === 'true'
 
   useEffect(() => {
     async function load() {
-      const [gemIds, hiddenIds, weightMap] = await Promise.all([fetchGems(), fetchHidden(), fetchWeights()])
+      const [gemIds, hiddenIds, weightMap, approvedItems] = await Promise.all([fetchGems(), fetchHidden(), fetchWeights(), fetchApproved()])
       setGems(gemIds)
       setHidden(hiddenIds)
       setWeights(weightMap)
+      setApproved(approvedItems)
 
       try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
@@ -553,9 +594,11 @@ export default function App() {
     if (filter === 'queue' && isCurator) loadQueue()
   }, [filter])
 
-  async function handleApprove(item) {
+  async function handleApprove(item, type) {
     setQueue((prev) => prev.filter((s) => s.id !== item.id))
-    await updateSubmissionStatus(item.id, 'approved')
+    await updateSubmissionStatus(item.id, 'approved', type)
+    const refreshed = await fetchApproved()
+    setApproved(refreshed)
   }
 
   async function handleReject(item) {
@@ -569,8 +612,13 @@ export default function App() {
   }
 
   const WEIGHT_BOOST = 50
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
 
-  const withMeta = items
+  // Convert approved submissions to feed items
+  const approvedFeedItems = approved.map(submissionToFeedItem)
+
+  // RSS items with meta
+  const rssMeta = items
     .filter((item) => !hidden.includes(item.id))
     .map((item) => ({
       ...item,
@@ -578,6 +626,13 @@ export default function App() {
       weight: weights[item.id] ?? 0,
       adjustedScore: item.trending + (weights[item.id] ?? 0) * WEIGHT_BOOST,
     }))
+
+  // Approved items < 7 days old go into main feed
+  const recentApproved = approvedFeedItems
+    .filter((item) => Date.now() - item.pubDate < SEVEN_DAYS)
+    .map((item) => ({ ...item, isGem: false, weight: 0, adjustedScore: item.trending }))
+
+  const withMeta = [...rssMeta, ...recentApproved]
 
   const preDisplay = withMeta
     .filter((item) => filter === 'gems' ? item.isGem : true)
@@ -601,6 +656,11 @@ export default function App() {
     return result
   })()
 
+  // All approved items for the Submitted archive tab
+  const submittedArchive = approvedFeedItems
+    .filter((item) => search ? item.title.toLowerCase().includes(search.toLowerCase()) : true)
+    .sort((a, b) => b.pubDate - a.pubDate)
+
   const topTrending = [...withMeta].sort((a, b) => b.adjustedScore - a.adjustedScore).slice(0, 5)
   const gemCount = gems.length
 
@@ -618,12 +678,13 @@ export default function App() {
           {[
             { id: 'all', label: 'ALL' },
             { id: 'gems', label: `⬡ GEMS${gemCount > 0 ? ` (${gemCount})` : ''}` },
+            { id: 'submitted', label: `✦ SUBMITTED${approvedFeedItems.length > 0 ? ` (${approvedFeedItems.length})` : ''}` },
             ...(isCurator ? [{ id: 'queue', label: `✦ QUEUE${queue.length > 0 ? ` (${queue.length})` : ''}` }] : []),
           ].map((f) => (
             <button key={f.id} onClick={() => setFilter(f.id)} style={{
-              background: filter === f.id ? (f.id === 'queue' ? T.submit + '18' : T.orange + '22') : 'transparent',
-              border: `1px solid ${filter === f.id ? (f.id === 'queue' ? T.submit : T.orange) : 'transparent'}`,
-              color: filter === f.id ? (f.id === 'queue' ? T.submit : T.orange) : T.textMuted,
+              background: filter === f.id ? (f.id === 'queue' ? T.submit + '18' : f.id === 'submitted' ? T.submit + '18' : T.orange + '22') : 'transparent',
+              border: `1px solid ${filter === f.id ? (f.id === 'queue' || f.id === 'submitted' ? T.submit : T.orange) : 'transparent'}`,
+              color: filter === f.id ? (f.id === 'queue' || f.id === 'submitted' ? T.submit : T.orange) : T.textMuted,
               borderRadius: 4, padding: '4px 16px', fontSize: 13, cursor: 'pointer',
               fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
               fontFamily: "'Outfit', sans-serif",
@@ -708,10 +769,19 @@ export default function App() {
         <div style={{ flex: 1, padding: '24px 32px', maxWidth: 820 }}>
           {filter === 'queue' ? (
             <>
-              <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 16, fontFamily: "'Outfit', sans-serif" }}>SUBMITTED STORIES</div>
+              <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 16, fontFamily: "'Outfit', sans-serif" }}>PENDING QUEUE</div>
               {queueLoading && <div style={{ color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif" }}><span style={{ color: T.orange }}>●</span> Loading queue…</div>}
               {!queueLoading && queue.length === 0 && <div style={{ color: T.textMuted, fontSize: 14, textAlign: 'center', marginTop: 60, fontFamily: "'Outfit', sans-serif" }}>Queue is empty.</div>}
               {queue.map((item) => <QueueCard key={item.id} item={item} onApprove={handleApprove} onReject={handleReject} />)}
+            </>
+          ) : filter === 'submitted' ? (
+            <>
+              <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 4, fontFamily: "'Outfit', sans-serif" }}>CURATED STORIES</div>
+              <div style={{ color: T.textMuted, fontSize: 12, marginBottom: 20, fontFamily: "'Outfit', sans-serif" }}>Stories hand-picked or submitted by the Firehose community.</div>
+              {submittedArchive.length === 0 && <div style={{ color: T.textMuted, fontSize: 14, textAlign: 'center', marginTop: 60, fontFamily: "'Outfit', sans-serif" }}>No curated stories yet.</div>}
+              {submittedArchive.map((item) => (
+                <Card key={item.id} item={item} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
+              ))}
             </>
           ) : (
             <>
