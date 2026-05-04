@@ -7,7 +7,7 @@ document.head.appendChild(fontLink)
 
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
-const CACHE_KEY = 'firehose-cache-v5'
+const CACHE_KEY = 'firehose-cache-v6'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -41,7 +41,7 @@ const TOPICS = [
   { id: 'ai-business',       label: 'AI & Business',    keywords: ['enterprise', 'startup', 'investment', 'funding', 'revenue', 'roi', 'productivity', 'workforce', 'jobs', 'strategy', 'ceo', 'leadership', 'business', 'economy', 'layoff', 'hiring', 'valuation'] },
   { id: 'ai-policy',         label: 'AI Policy',        keywords: ['regulation', 'policy', 'governance', 'law', 'ethics', 'safety', 'risk', 'bias', 'copyright', 'government', 'eu ai act', 'legislation', 'compliance', 'responsible ai', 'alignment', 'ban'] },
   { id: 'ai-society',        label: 'AI & Society',     keywords: ['society', 'culture', 'education', 'healthcare', 'climate', 'inequality', 'future of work', 'human', 'impact', 'social', 'privacy', 'surveillance', 'democracy', 'journalism', 'media'] },
-  { id: 'rogue-ai',          label: 'Rogue AI',         keywords: ['hallucination', 'fail', 'gone wrong', 'bizarre', 'weird', 'chaos', 'accident', 'unintended', 'lawsuit', 'controversy', 'backlash', 'scandal', 'deepfake', 'misinformation', 'glitch', 'outage', 'meltdown', 'error', 'disaster', 'harm', 'dangerous'] },
+  { id: 'rogue-ai',          label: 'Rogue AI',         keywords: ['hallucination', 'fail', 'gone wrong', 'bizarre', 'weird', 'chaos', 'accident', 'unintended', 'lawsuit', 'controversy', 'backlash', 'scandal', 'deepfake', 'misinformation', 'glitch', 'outage', 'meltdown', 'error', 'disaster', 'harm', 'dangerous', 'sentient', 'sentience', 'conscious', 'consciousness', 'psychosis', 'delusion', 'delusional', 'self-aware', 'self aware', 'personhood', 'ai rights', 'feelings', 'emotions', 'existential risk', 'dangerous ai', 'ai threat', 'superintelligence', 'manipulat', 'deceiv', 'lied', 'lying', 'gaslighting', 'breakdown', 'refused', 'threatening', 'creepy', 'disturbing', 'unsettling', 'alarming'] },
 ]
 
 const AI_KEYWORDS = [
@@ -102,7 +102,13 @@ function isAIRelated(item) {
 function getTopics(item) {
   const text = `${item.title} ${item.description} ${(item.categories || []).join(' ')}`.toLowerCase()
   return TOPICS
-    .filter((t) => t.id !== 'all' && t.keywords.some((kw) => text.includes(kw)))
+    .filter((t) => t.id !== 'all' && t.keywords.some((kw) => {
+      // Use word-boundary matching for short/ambiguous keywords, substring for phrases
+      if (kw.length <= 4 || kw === 'gpt' || kw === 'llm' || kw === 'gpu') {
+        return new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text)
+      }
+      return text.includes(kw)
+    }))
     .map((t) => t.id)
 }
 
