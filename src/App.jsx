@@ -341,12 +341,13 @@ function Ticker({ items }) {
   )
 }
 
-function Card({ item, onToggleGem, onHide, onWeight, isCurator }) {
+function Card({ item, gemIds, onToggleGem, onHide, onWeight, isCurator }) {
+  const isGem = gemIds ? gemIds.includes(item.id) : item.isGem
   const sourceColor = item.sourceType === 'partner' ? T.partner : item.sourceType === 'submitted' ? T.submit : item.sourceType === 'reddit' ? T.orange : item.sourceType === 'substack' ? T.violet : T.blue
   return (
-    <div style={{ background: T.card, border: `1px solid ${item.isGem ? T.gem : T.border}`, borderRadius: 8, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }}>
+    <div style={{ background: T.card, border: `1px solid ${isGem ? T.gem : T.border}`, borderRadius: 8, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        {item.isGem && (
+        {isGem && (
           <span style={{ background: T.gem, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.08em', fontFamily: "'Outfit', sans-serif" }}><span style={{ fontSize: 8 }}>◆</span> GEM</span>
         )}
         <span style={{ background: '#1a1a1a', color: sourceColor, fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, border: `1px solid ${sourceColor}33`, letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif" }}>
@@ -369,13 +370,13 @@ function Card({ item, onToggleGem, onHide, onWeight, isCurator }) {
       {isCurator && (
         <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
           <button onClick={() => onToggleGem(item)} style={{
-            background: item.isGem ? T.gem + '22' : 'transparent',
-            border: `1px solid ${item.isGem ? T.gem : T.border}`,
-            color: item.isGem ? T.gem : T.textMuted,
+            background: isGem ? T.gem + '22' : 'transparent',
+            border: `1px solid ${isGem ? T.gem : T.border}`,
+            color: isGem ? T.gem : T.textMuted,
             borderRadius: 4, padding: '4px 12px', fontSize: 11, cursor: 'pointer',
             fontWeight: 600, letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif",
           }}>
-            {item.isGem ? '◆ MARKED AS GEM' : '◇ MARK AS GEM'}
+            {isGem ? '◆ MARKED AS GEM' : '◇ MARK AS GEM'}
           </button>
           <div style={{ display: 'flex', gap: 2, marginLeft: 4 }}>
             <button onClick={() => onWeight(item, 1)} title="Upweight" style={{
@@ -790,7 +791,7 @@ export default function App() {
               <div style={{ color: T.textMuted, fontSize: 12, marginBottom: 20, fontFamily: "'Outfit', sans-serif" }}>Stories hand-picked or submitted by humAIn.</div>
               {submittedArchive.length === 0 && <div style={{ color: T.textMuted, fontSize: 14, textAlign: 'center', marginTop: 60, fontFamily: "'Outfit', sans-serif" }}>No curated stories yet.</div>}
               {submittedArchive.map((item) => (
-                <Card key={item.id} item={item} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
+                <Card key={item.id} item={item} gemIds={gems} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
               ))}
             </>
           ) : (
@@ -806,7 +807,7 @@ export default function App() {
                 </div>
               )}
               {displayed.map((item) => (
-                <Card key={item.id} item={item} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
+                <Card key={item.id} item={item} gemIds={gems} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
               ))}
             </>
           )}
