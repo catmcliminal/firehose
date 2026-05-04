@@ -58,7 +58,7 @@ const T = {
   textMuted: '#666', textDim: '#999', red: '#ff4444',
 }
 
-const TIER_SCORES = { 1: 30, 2: 20, 3: 10, 4: 5 }
+const TIER_SCORES = { 1: 60, 2: 40, 3: 20, 4: 4 }
 const PROXIES = [
   (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   (url) => `https://api.codetabs.com/v1/proxy?quest=${url}`,
@@ -136,7 +136,8 @@ async function fetchFeed(source) {
       const xml = new window.DOMParser().parseFromString(text, 'text/xml')
       const items = [...xml.querySelectorAll('item, entry')]
       if (items.length === 0) continue
-      return items.slice(0, 10).map((item, idx) => {
+      const maxItems = source.type === 'reddit' ? 5 : 10
+      return items.slice(0, maxItems).map((item, idx) => {
         const get = (tag) => item.querySelector(tag)?.textContent?.trim() || ''
         const getAttr = (tag, attr) => item.querySelector(tag)?.getAttribute(attr) || ''
         const title = decodeHtmlEntities(get('title'))
@@ -578,11 +579,27 @@ export default function App() {
       adjustedScore: item.trending + (weights[item.id] ?? 0) * WEIGHT_BOOST,
     }))
 
-  const displayed = withMeta
+  const preDisplay = withMeta
     .filter((item) => filter === 'gems' ? item.isGem : true)
     .filter((item) => topic === 'all' ? true : item.topics.includes(topic))
     .filter((item) => search ? item.title.toLowerCase().includes(search.toLowerCase()) : true)
     .sort((a, b) => b.adjustedScore - a.adjustedScore)
+
+  // Diversity cap: Reddit max 30% of feed
+  const displayed = (() => {
+    if (filter === 'gems' || topic !== 'all') return preDisplay
+    const result = []
+    const redditCount = { count: 0 }
+    const maxReddit = Math.ceil(preDisplay.length * 0.3)
+    for (const item of preDisplay) {
+      if (item.sourceType === 'reddit') {
+        if (redditCount.count < maxReddit) { result.push(item); redditCount.count++ }
+      } else {
+        result.push(item)
+      }
+    }
+    return result
+  })()
 
   const topTrending = [...withMeta].sort((a, b) => b.adjustedScore - a.adjustedScore).slice(0, 5)
   const gemCount = gems.length
