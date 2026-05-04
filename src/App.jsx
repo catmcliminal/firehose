@@ -345,7 +345,7 @@ function Card({ item, gemIds, onToggleGem, onHide, onWeight, isCurator }) {
   const isGem = gemIds ? gemIds.includes(item.id) : item.isGem
   const sourceColor = item.sourceType === 'partner' ? T.partner : item.sourceType === 'submitted' ? T.submit : item.sourceType === 'reddit' ? T.orange : item.sourceType === 'substack' ? T.violet : T.blue
   return (
-    <div style={{ background: T.card, border: `1px solid ${isGem ? T.gem : T.border}`, borderRadius: 8, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: isGem ? `3px solid ${T.gem}` : `1px solid ${T.border}`, borderRadius: 8, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         {isGem && (
           <span style={{ background: T.gem, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.08em', fontFamily: "'Outfit', sans-serif" }}><span style={{ fontSize: 8 }}>◆</span> GEM</span>
