@@ -245,7 +245,7 @@ async function submitStory({ url, title, note }) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions`, {
     method: 'POST',
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify({ url, title, note }),
+    body: JSON.stringify({ url, title, note, status: 'pending' }),
   })
   if (!res.ok) throw new Error(`submit failed: ${res.status}`)
 }
