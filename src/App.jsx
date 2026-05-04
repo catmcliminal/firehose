@@ -526,11 +526,11 @@ export default function App() {
 
   useEffect(() => {
     async function load() {
-      const [gemIds, hiddenIds, weightMap, approvedItems] = await Promise.all([fetchGems(), fetchHidden(), fetchWeights(), fetchApproved()])
+      const [gemIds, hiddenIds, weightMap] = await Promise.all([fetchGems(), fetchHidden(), fetchWeights()])
       setGems(gemIds)
       setHidden(hiddenIds)
       setWeights(weightMap)
-      setApproved(approvedItems)
+      fetchApproved().then(setApproved).catch(() => {})
 
       try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
