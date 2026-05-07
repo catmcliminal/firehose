@@ -1,4 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isMobile
+}
 
 const fontLink = document.createElement('link')
 fontLink.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=EB+Garamond:wght@400;600&display=swap'
@@ -7,7 +17,7 @@ document.head.appendChild(fontLink)
 
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
-const CACHE_KEY = 'firehose-cache-v8'
+const CACHE_KEY = 'firehose-cache-v9'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -357,7 +367,7 @@ function Card({ item, gemIds, onToggleGem, onHide, onWeight, isCurator }) {
       </div>
 
       <a href={item.link} target="_blank" rel="noopener noreferrer"
-        style={{ color: T.text, textDecoration: 'none', fontSize: 19, fontWeight: 400, lineHeight: 1.35, display: 'block', marginBottom: 10, fontFamily: "'EB Garamond', serif" }}>
+        style={{ color: T.text, textDecoration: 'none', fontSize: 'clamp(16px, 2.5vw, 19px)', fontWeight: 400, lineHeight: 1.35, display: 'block', marginBottom: 10, fontFamily: "'EB Garamond', serif" }}>
         {item.title}
       </a>
 
@@ -524,6 +534,7 @@ export default function App() {
   const [approved, setApproved] = useState([])
 
   const isCurator = new URLSearchParams(window.location.search).get('curator') === 'true'
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     async function load() {
@@ -681,10 +692,10 @@ export default function App() {
     <div style={{ background: T.bg, minHeight: '100vh', color: T.text, fontFamily: "'Outfit', system-ui, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ borderBottom: `1px solid ${T.border}`, padding: '0 32px', display: 'flex', alignItems: 'center', gap: 24, height: 60 }}>
+      <div style={{ borderBottom: `1px solid ${T.border}`, padding: isMobile ? '8px 16px' : '0 32px', display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 24, height: isMobile ? 'auto' : 60, flexWrap: isMobile ? 'wrap' : 'nowrap', paddingTop: isMobile ? 10 : undefined, paddingBottom: isMobile ? 10 : undefined }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginRight: 8 }}>
-          <span style={{ background: T.orange, color: '#000', fontWeight: 900, fontSize: 22, letterSpacing: '0.1em', borderRadius: 4, padding: '5px 12px', fontFamily: "'Outfit', sans-serif", lineHeight: 1 }}>FIREHOSE</span>
-          <span style={{ color: T.text, fontSize: 11, letterSpacing: '0.08em', lineHeight: 1.5, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>AI intelligence<br />Human-curated</span>
+          <span style={{ background: T.orange, color: '#000', fontWeight: 900, fontSize: isMobile ? 18 : 22, letterSpacing: '0.1em', borderRadius: 4, padding: '5px 12px', fontFamily: "'Outfit', sans-serif", lineHeight: 1 }}>FIREHOSE</span>
+          {!isMobile && <span style={{ color: T.text, fontSize: 11, letterSpacing: '0.08em', lineHeight: 1.5, whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>AI intelligence<br />Human-curated</span>}
         </div>
 
         <div style={{ display: 'flex', gap: 4 }}>
@@ -733,11 +744,11 @@ export default function App() {
       {/* TICKER */}
       <Ticker items={topTrending} />
 
-      <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
 
         {/* SIDEBAR */}
-        <div style={{ width: 220, borderRight: `1px solid ${T.border}`, padding: '24px 16px', flexShrink: 0 }}>
-          <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>TOPICS</div>
+        <div style={{ width: isMobile ? '100%' : 220, borderRight: isMobile ? 'none' : `1px solid ${T.border}`, borderBottom: isMobile ? `1px solid ${T.border}` : 'none', padding: isMobile ? '12px 16px' : '24px 16px', flexShrink: 0, display: isMobile ? 'flex' : 'block', overflowX: isMobile ? 'auto' : 'visible', gap: isMobile ? 6 : 0 }}>
+          {!isMobile && <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>TOPICS</div>}
           {TOPICS.map((t) => {
             const count = t.id === 'all'
               ? withMeta.filter((i) => filter === 'gems' ? i.isGem : true).length
@@ -746,19 +757,21 @@ export default function App() {
             return (
               <div key={t.id} onClick={() => setTopic(t.id)} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '6px 8px', borderRadius: 4, cursor: 'pointer', marginBottom: 2,
+                padding: isMobile ? '5px 10px' : '6px 8px', borderRadius: 4, cursor: 'pointer',
+                marginBottom: isMobile ? 0 : 2, flexShrink: isMobile ? 0 : undefined,
+                whiteSpace: isMobile ? 'nowrap' : undefined,
                 background: topic === t.id ? T.orange + '18' : 'transparent',
                 color: topic === t.id ? T.orange : isRogue ? T.red : T.textDim,
                 fontSize: 13, fontFamily: "'Outfit', sans-serif",
               }}>
                 <span>{isRogue ? '⚡ ' : ''}{t.label}</span>
-                <span style={{ fontSize: 11, color: T.textMuted }}>{count}</span>
+                {!isMobile && <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 8 }}>{count}</span>}
               </div>
             )
           })}
 
-          <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: '0.1em', margin: '24px 0 12px', fontFamily: "'Outfit', sans-serif" }}>FEED STATS</div>
-          <div style={{ fontSize: 12, color: T.textDim, lineHeight: 2.2, fontFamily: "'Outfit', sans-serif" }}>
+          {!isMobile && <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: '0.1em', margin: '24px 0 12px', fontFamily: "'Outfit', sans-serif" }}>FEED STATS</div>}
+          {!isMobile && <div style={{ fontSize: 12, color: T.textDim, lineHeight: 2.2, fontFamily: "'Outfit', sans-serif" }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>In feed</span>
               <span style={{ color: T.text, fontWeight: 600 }}>{withMeta.length}</span>
@@ -775,11 +788,11 @@ export default function App() {
               <span>Sources</span>
               <span style={{ color: T.text, fontWeight: 600 }}>{SOURCES.length}</span>
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* FEED */}
-        <div style={{ flex: 1, padding: '24px 32px', maxWidth: 820 }}>
+        <div style={{ flex: 1, padding: isMobile ? '16px' : '24px 32px', maxWidth: isMobile ? '100%' : 820 }}>
           {filter === 'queue' ? (
             <>
               <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 16, fontFamily: "'Outfit', sans-serif" }}>PENDING QUEUE</div>
