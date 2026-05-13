@@ -17,7 +17,7 @@ document.head.appendChild(fontLink)
 
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
-const CACHE_KEY = 'firehose-cache-v9'
+const CACHE_KEY = 'firehose-cache-v10'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -27,11 +27,11 @@ const SOURCES = [
   { id: 'aigov',       name: 'AI Governance',            url: 'https://aigovernancelead.substack.com/feed',                                type: 'substack',    tier: 3 },
   { id: 'mittr',       name: 'MIT Tech Review',          url: 'https://www.technologyreview.com/topic/artificial-intelligence/feed',       type: 'publication', tier: 1 },
   { id: 'adweek',      name: 'Adweek',                   url: 'https://www.adweek.com/category/artificial-intelligence/feed',              type: 'publication', tier: 2 },
-  { id: 'drum',        name: 'The Drum',                 url: 'https://www.thedrum.com/rss',                                               type: 'publication', tier: 2 },
-  { id: 'mumbrella',   name: 'Mumbrella',                url: 'https://mumbrella.com.au/feed',                                             type: 'publication', tier: 3 },
+  { id: 'drum',        name: 'The Drum',                 url: 'https://www.thedrum.com/rss/news',                                          type: 'publication', tier: 2 },
+  { id: 'mumbrella',   name: 'Mumbrella',                url: 'https://mumbrella.com.au/feed/news',                                         type: 'publication', tier: 3 },
   { id: 'mdive',       name: 'Marketing Dive',           url: 'https://www.marketingdive.com/feeds/news',                                  type: 'publication', tier: 2 },
-  { id: 'verge',       name: 'The Verge',                url: 'https://www.theverge.com/ai-artificial-intelligence/rss/index.xml',         type: 'publication', tier: 1 },
-  { id: 'wired',       name: 'Wired',                    url: 'https://www.wired.com/feed/tag/ai/rss',                                     type: 'publication', tier: 1 },
+  { id: 'verge',       name: 'The Verge',                url: 'https://www.theverge.com/rss/index.xml',                                   type: 'publication', tier: 1 },
+  { id: 'wired',       name: 'Wired',                    url: 'https://www.wired.com/feed/rss',                                            type: 'publication', tier: 1 },
   { id: 'adnews',      name: 'AdNews',                   url: 'https://www.adnews.com.au/feed',                                            type: 'publication', tier: 3 },
   { id: 'rai',         name: 'r/ArtificialIntelligence', url: 'https://www.reddit.com/r/ArtificialIntelligence/.rss',                      type: 'reddit',      tier: 4 },
   { id: 'rartificial', name: 'r/artificial',             url: 'https://www.reddit.com/r/artificial/.rss',                                  type: 'reddit',      tier: 4 },
@@ -71,6 +71,7 @@ const T = {
 const TIER_SCORES = { 1: 60, 2: 40, 3: 20, 4: 4 }
 const PROXIES = [
   (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   (url) => `https://api.codetabs.com/v1/proxy?quest=${url}`,
 ]
 
