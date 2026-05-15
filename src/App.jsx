@@ -21,10 +21,10 @@ const CACHE_KEY = 'firehose-cache-v10'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
-  { id: 'abi',         name: 'How Not To Use AI',       url: 'https://abiawomosu.substack.com/feed',                                      type: 'substack',    tier: 3 },
-  { id: 'tut',         name: 'Time Under Tension',       url: 'https://timeundertension.substack.com/feed',                                type: 'substack',    tier: 3 },
-  { id: 'ruben',       name: 'How to AI',                url: 'https://ruben.substack.com/feed',                                           type: 'substack',    tier: 3 },
-  { id: 'aigov',       name: 'AI Governance',            url: 'https://aigovernancelead.substack.com/feed',                                type: 'substack',    tier: 3 },
+  { id: 'abi',         name: 'How Not To Use AI',       url: 'https://abiawomosu.substack.com/feed',                                      type: 'substack',    tier: 3, alwaysAI: true },
+  { id: 'tut',         name: 'Time Under Tension',       url: 'https://timeundertension.substack.com/feed',                                type: 'substack',    tier: 3, alwaysAI: true },
+  { id: 'ruben',       name: 'How to AI',                url: 'https://ruben.substack.com/feed',                                           type: 'substack',    tier: 3, alwaysAI: true },
+  { id: 'aigov',       name: 'AI Governance',            url: 'https://aigovernancelead.substack.com/feed',                                type: 'substack',    tier: 3, alwaysAI: true },
   { id: 'mittr',       name: 'MIT Tech Review',          url: 'https://www.technologyreview.com/topic/artificial-intelligence/feed',       type: 'publication', tier: 1 },
   { id: 'adweek',      name: 'Adweek',                   url: 'https://www.adweek.com/category/artificial-intelligence/feed',              type: 'publication', tier: 2 },
   { id: 'drum',        name: 'The Drum',                 url: 'https://www.thedrum.com/rss/news',                                          type: 'publication', tier: 2 },
@@ -33,13 +33,13 @@ const SOURCES = [
   { id: 'verge',       name: 'The Verge',                url: 'https://www.theverge.com/rss/index.xml',                                   type: 'publication', tier: 1 },
   { id: 'wired',       name: 'Wired',                    url: 'https://www.wired.com/feed/rss',                                            type: 'publication', tier: 1 },
   { id: 'adnews',      name: 'AdNews',                   url: 'https://www.adnews.com.au/feed',                                            type: 'publication', tier: 3 },
-  { id: 'rai',         name: 'r/ArtificialIntelligence', url: 'https://www.reddit.com/r/ArtificialIntelligence/.rss',                      type: 'reddit',      tier: 4 },
-  { id: 'rartificial', name: 'r/artificial',             url: 'https://www.reddit.com/r/artificial/.rss',                                  type: 'reddit',      tier: 4 },
-  { id: 'rml',         name: 'r/MachineLearning',        url: 'https://www.reddit.com/r/MachineLearning/.rss',                             type: 'reddit',      tier: 4 },
-  { id: 'rchatgpt',    name: 'r/ChatGPT',                url: 'https://www.reddit.com/r/ChatGPT/.rss',                                     type: 'reddit',      tier: 4 },
-  { id: 'raiart',      name: 'r/AIArt',                  url: 'https://www.reddit.com/r/AIArt/.rss',                                       type: 'reddit',      tier: 4 },
+  { id: 'rai',         name: 'r/ArtificialIntelligence', url: 'https://www.reddit.com/r/ArtificialIntelligence/hot.rss',                      type: 'reddit',      tier: 4, alwaysAI: true },
+  { id: 'rartificial', name: 'r/artificial',             url: 'https://www.reddit.com/r/artificial/hot.rss',                                  type: 'reddit',      tier: 4, alwaysAI: true },
+  { id: 'rml',         name: 'r/MachineLearning',        url: 'https://www.reddit.com/r/MachineLearning/hot.rss',                             type: 'reddit',      tier: 4, alwaysAI: true },
+  { id: 'rchatgpt',    name: 'r/ChatGPT',                url: 'https://www.reddit.com/r/ChatGPT/hot.rss',                                     type: 'reddit',      tier: 4, alwaysAI: true },
+  { id: 'raiart',      name: 'r/AIArt',                  url: 'https://www.reddit.com/r/AIArt/hot.rss',                                       type: 'reddit',      tier: 4, alwaysAI: true },
   { id: 'rmarketing',  name: 'r/marketing',              url: 'https://www.reddit.com/r/marketing/.rss',                                   type: 'reddit',      tier: 4 },
-  { id: 'ropenai',     name: 'r/OpenAI',                 url: 'https://www.reddit.com/r/OpenAI/.rss',                                      type: 'reddit',      tier: 4 },
+  { id: 'ropenai',     name: 'r/OpenAI',                 url: 'https://www.reddit.com/r/OpenAI/.rss',                                      type: 'reddit',      tier: 4, alwaysAI: true },
 ]
 
 const TOPICS = [
@@ -113,8 +113,9 @@ function cleanDescription(raw, sourceType) {
 const AI_REGEXES = AI_KEYWORDS.map((kw) => new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'))
 
 function isAIRelated(item) {
-  const title = item.title
-  return AI_REGEXES.some((re) => re.test(title))
+  if (item.alwaysAI) return true
+  const text = `${item.title} ${item.description || ''}`
+  return AI_REGEXES.some((re) => re.test(text))
 }
 
 function getTopics(item) {
@@ -171,6 +172,7 @@ async function fetchFeed(source) {
           description: cleanDescription(description, source.type).slice(0, 220),
           source: source.name,
           sourceType: source.type,
+          alwaysAI: source.alwaysAI || false,
           categories,
           topics: [],
           trending: 0,
