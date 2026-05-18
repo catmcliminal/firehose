@@ -465,6 +465,63 @@ function Card({ item, gemIds, summary, onToggleGem, onHide, onWeight, isCurator 
   )
 }
 
+function AboutModal({ onClose }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#141414', border: `1px solid ${T.border}`, borderRadius: 10, padding: 32, width: 500, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div>
+            <span style={{ background: T.orange, color: '#000', fontWeight: 900, fontSize: 18, letterSpacing: '0.1em', borderRadius: 4, padding: '4px 10px', fontFamily: "'Outfit', sans-serif" }}>FIREHOSE</span>
+            <p style={{ color: T.textMuted, fontSize: 12, margin: '8px 0 0', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.04em' }}>AI intelligence. Human-curated.</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.textMuted, fontSize: 18, cursor: 'pointer', padding: 0, lineHeight: 1 }}>✕</button>
+        </div>
+
+        <p style={{ color: T.text, fontSize: 14, lineHeight: 1.7, margin: '0 0 20px', fontFamily: "'Outfit', sans-serif" }}>
+          Firehose is a real-time AI news feed built for marketing and creative professionals who need to stay sharp without drowning in noise. 18 sources. Scored by freshness and source quality. Updated hourly.
+        </p>
+
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginBottom: 20 }}>
+          <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>HOW IT WORKS</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[
+              { label: 'Sources', text: 'MIT Tech Review, Adweek, The Verge, Wired, Marketing Dive, The Drum, Mumbrella, AdNews, 4 AI newsletters, and 6 AI subreddits.' },
+              { label: 'Scoring', text: 'Each article gets a trending score based on recency, source tier, and cross-source signal — similar stories trending across multiple outlets rank higher.' },
+              { label: 'Filter', text: 'Every article is checked for AI relevance before it hits the feed. Curated sources (newsletters, AI subreddits) bypass the filter entirely.' },
+            ].map(({ label, text }) => (
+              <div key={label} style={{ display: 'flex', gap: 12 }}>
+                <span style={{ color: T.orange, fontSize: 11, fontWeight: 700, width: 64, flexShrink: 0, paddingTop: 2, fontFamily: "'Outfit', sans-serif", letterSpacing: '0.04em' }}>{label.toUpperCase()}</span>
+                <span style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, fontFamily: "'Outfit', sans-serif" }}>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginBottom: 20 }}>
+          <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>GEMS</div>
+          <p style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, margin: 0, fontFamily: "'Outfit', sans-serif" }}>
+            <span style={{ color: T.gem, fontWeight: 700 }}>◆ Gems</span> are articles hand-picked by the curator as essential reading. Gem cards include a <span style={{ color: T.orange }}>✦ Why this matters</span> note — a short editorial take on why you should care.
+          </p>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginBottom: 20 }}>
+          <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>SUBMIT A STORY</div>
+          <p style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, margin: 0, fontFamily: "'Outfit', sans-serif" }}>
+            Spotted something worth sharing? Hit <span style={{ color: T.submit, fontWeight: 700 }}>✦ SUBMIT</span> in the header. Stories go into a review queue — approved pieces appear in the feed and live permanently in the <span style={{ color: T.submit }}>SUBMITTED</span> tab.
+          </p>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
+          <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>ABOUT</div>
+          <p style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, margin: 0, fontFamily: "'Outfit', sans-serif" }}>
+            Firehose is a product of <span style={{ color: T.text, fontWeight: 600 }}>humAIn</span> — a community for marketers and creatives navigating the AI shift. We cut through the hype so you can focus on what actually matters for your work.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SubmitModal({ onClose }) {
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
@@ -580,6 +637,7 @@ export default function App() {
   const [gems, setGems] = useState([])
   const [hidden, setHidden] = useState([])
   const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [showAboutModal, setShowAboutModal] = useState(false)
   const [queue, setQueue] = useState([])
   const [queueLoading, setQueueLoading] = useState(false)
   const [weights, setWeights] = useState({})
@@ -798,6 +856,11 @@ export default function App() {
             color: T.textMuted, borderRadius: 4, padding: '4px 12px',
             fontSize: 12, cursor: 'pointer', letterSpacing: '0.06em', fontFamily: "'Outfit', sans-serif",
           }}>↺ REFRESH</button>
+          <button onClick={() => setShowAboutModal(true)} style={{
+            background: 'transparent', border: `1px solid ${T.border}`,
+            color: T.textMuted, borderRadius: 4, padding: '5px 10px',
+            fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: "'Outfit', sans-serif", lineHeight: 1,
+          }}>?</button>
           <button onClick={() => setShowSubmitModal(true)} style={{
             background: T.submit + '18', color: T.submit, border: `1px solid ${T.submit}`,
             borderRadius: 4, padding: '5px 14px',
@@ -894,6 +957,7 @@ export default function App() {
         </div>
       </div>
 
+      {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} />}
       {showSubmitModal && <SubmitModal onClose={() => setShowSubmitModal(false)} />}
     </div>
   )
