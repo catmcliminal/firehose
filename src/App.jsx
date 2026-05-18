@@ -17,7 +17,8 @@ document.head.appendChild(fontLink)
 
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
-const CACHE_KEY = 'firehose-cache-v10'
+const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_KEY || ''
+const CACHE_KEY = 'firehose-cache-v11'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -33,13 +34,12 @@ const SOURCES = [
   { id: 'verge',       name: 'The Verge',                url: 'https://www.theverge.com/rss/index.xml',                                   type: 'publication', tier: 1 },
   { id: 'wired',       name: 'Wired',                    url: 'https://www.wired.com/feed/rss',                                            type: 'publication', tier: 1 },
   { id: 'adnews',      name: 'AdNews',                   url: 'https://www.adnews.com.au/feed',                                            type: 'publication', tier: 3 },
-  { id: 'rai',         name: 'r/ArtificialIntelligence', url: 'https://www.reddit.com/r/ArtificialIntelligence/hot.rss',                      type: 'reddit',      tier: 4, alwaysAI: true },
   { id: 'rartificial', name: 'r/artificial',             url: 'https://www.reddit.com/r/artificial/hot.rss',                                  type: 'reddit',      tier: 4, alwaysAI: true },
   { id: 'rml',         name: 'r/MachineLearning',        url: 'https://www.reddit.com/r/MachineLearning/hot.rss',                             type: 'reddit',      tier: 4, alwaysAI: true },
   { id: 'rchatgpt',    name: 'r/ChatGPT',                url: 'https://www.reddit.com/r/ChatGPT/hot.rss',                                     type: 'reddit',      tier: 4, alwaysAI: true },
   { id: 'raiart',      name: 'r/AIArt',                  url: 'https://www.reddit.com/r/AIArt/hot.rss',                                       type: 'reddit',      tier: 4, alwaysAI: true },
-  { id: 'rmarketing',  name: 'r/marketing',              url: 'https://www.reddit.com/r/marketing/.rss',                                   type: 'reddit',      tier: 4 },
-  { id: 'ropenai',     name: 'r/OpenAI',                 url: 'https://www.reddit.com/r/OpenAI/.rss',                                      type: 'reddit',      tier: 4, alwaysAI: true },
+  { id: 'rmarketing',  name: 'r/marketing',              url: 'https://www.reddit.com/r/marketing/hot.rss',                                   type: 'reddit',      tier: 4 },
+  { id: 'ropenai',     name: 'r/OpenAI',                 url: 'https://www.reddit.com/r/OpenAI/hot.rss',                                      type: 'reddit',      tier: 4, alwaysAI: true },
 ]
 
 const TOPICS = [
@@ -297,6 +297,49 @@ async function fetchApproved() {
   return Array.isArray(data) ? data : []
 }
 
+// ── AI SUMMARIES ──────────────────────────────────────────────────────────────
+
+async function generateSummary(title, description) {
+  if (!ANTHROPIC_KEY) return ''
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-calls': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 150,
+        messages: [{
+          role: 'user',
+          content: `You are Cat, a curator for Firehose — an AI news feed for marketers and creatives. Write a 2-3 sentence "why this matters" in Cat's voice: confident, direct, slightly opinionated, punchy. No corporate speak. Article: "${title}". Context: "${description || 'no description'}". Output the summary only, no preamble.`,
+        }],
+      }),
+    })
+    const data = await res.json()
+    return data.content?.[0]?.text || ''
+  } catch (e) { return '' }
+}
+
+async function saveSummary(articleId, summary) {
+  await fetch(`${SUPABASE_URL}/rest/v1/summaries`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ article_id: articleId, summary }),
+  })
+}
+
+async function fetchSummaries() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/summaries?select=article_id,summary`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+  })
+  const data = await res.json()
+  return Array.isArray(data) ? Object.fromEntries(data.map((r) => [r.article_id, r.summary])) : {}
+}
+
 function submissionToFeedItem(sub) {
   const pubDate = new Date(sub.submitted_at).getTime()
   const ageHours = (Date.now() - pubDate) / 3600000
@@ -354,7 +397,7 @@ function Ticker({ items }) {
   )
 }
 
-function Card({ item, gemIds, onToggleGem, onHide, onWeight, isCurator }) {
+function Card({ item, gemIds, summary, onToggleGem, onHide, onWeight, isCurator }) {
   const isGem = gemIds ? gemIds.includes(item.id) : item.isGem
   const sourceColor = item.sourceType === 'partner' ? T.partner : item.sourceType === 'submitted' ? T.submit : item.sourceType === 'reddit' ? T.orange : item.sourceType === 'substack' ? T.violet : T.blue
   return (
@@ -376,6 +419,12 @@ function Card({ item, gemIds, onToggleGem, onHide, onWeight, isCurator }) {
 
       {item.description && (
         <p style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, margin: '0 0 14px', fontFamily: "'Outfit', sans-serif" }}>{item.description}…</p>
+      )}
+
+      {summary && (
+        <p style={{ color: '#ffb899', fontSize: 13, lineHeight: 1.6, margin: '0 0 14px', fontStyle: 'italic', fontFamily: "'Outfit', sans-serif", paddingLeft: 12, borderLeft: `2px solid ${T.orange}55` }}>
+          <span style={{ color: T.orange, fontStyle: 'normal', fontWeight: 700, marginRight: 6 }}>✦ Why this matters:</span>{summary}
+        </p>
       )}
 
       <ScoreBar value={item.trending} color={T.orange} label="TRENDING" />
@@ -535,6 +584,7 @@ export default function App() {
   const [queueLoading, setQueueLoading] = useState(false)
   const [weights, setWeights] = useState({})
   const [approved, setApproved] = useState([])
+  const [summaries, setSummaries] = useState({})
 
   const isCurator = new URLSearchParams(window.location.search).get('curator') === 'true'
   const isMobile = useIsMobile()
@@ -546,6 +596,7 @@ export default function App() {
       setHidden(hiddenIds)
       setWeights(weightMap)
       fetchApproved().then(setApproved).catch(() => {})
+      fetchSummaries().then(setSummaries).catch(() => {})
 
       try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
@@ -586,7 +637,18 @@ export default function App() {
       catch (e) { console.error(e); setGems((prev) => [...prev, item.id]) }
     } else {
       setGems((prev) => [...prev, item.id])
-      try { await addGem(item) }
+      try {
+        await addGem(item)
+        if (ANTHROPIC_KEY && !summaries[item.id]) {
+          try {
+            const summary = await generateSummary(item.title, item.description)
+            if (summary) {
+              await saveSummary(item.id, summary)
+              setSummaries((prev) => ({ ...prev, [item.id]: summary }))
+            }
+          } catch (e) { console.error('summary generation failed:', e) }
+        }
+      }
       catch (e) { console.error(e); setGems((prev) => prev.filter((g) => g !== item.id)) }
     }
   }
@@ -809,7 +871,7 @@ export default function App() {
               <div style={{ color: T.textMuted, fontSize: 12, marginBottom: 20, fontFamily: "'Outfit', sans-serif" }}>Stories hand-picked or submitted by humAIn.</div>
               {submittedArchive.length === 0 && <div style={{ color: T.textMuted, fontSize: 14, textAlign: 'center', marginTop: 60, fontFamily: "'Outfit', sans-serif" }}>No curated stories yet.</div>}
               {submittedArchive.map((item) => (
-                <Card key={item.id} item={item} gemIds={gems} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
+                <Card key={item.id} item={item} gemIds={gems} summary={summaries[item.id]} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
               ))}
             </>
           ) : (
@@ -825,7 +887,7 @@ export default function App() {
                 </div>
               )}
               {displayed.map((item) => (
-                <Card key={item.id} item={item} gemIds={gems} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
+                <Card key={item.id} item={item} gemIds={gems} summary={summaries[item.id]} onToggleGem={toggleGem} onHide={handleHide} onWeight={handleWeight} isCurator={isCurator} />
               ))}
             </>
           )}
