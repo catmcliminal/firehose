@@ -26,7 +26,7 @@ const SOURCES = [
   { id: 'tut',         name: 'Time Under Tension',       url: 'https://timeundertension.substack.com/feed',                                type: 'substack',    tier: 3, alwaysAI: true },
   { id: 'ruben',       name: 'How to AI',                url: 'https://ruben.substack.com/feed',                                           type: 'substack',    tier: 3, alwaysAI: true },
   { id: 'aigov',       name: 'AI Governance',            url: 'https://aigovernancelead.substack.com/feed',                                type: 'substack',    tier: 3, alwaysAI: true },
-  { id: 'liminal',     name: 'L1M1NAL',                  url: 'https://l1m1nal.substack.com/feed',                                         type: 'substack',    tier: 2, alwaysAI: true },
+  { id: 'liminal',     name: 'L1M1NAL',                  url: 'https://l1m1nal.substack.com/feed',                                         type: 'substack',    tier: 3, alwaysAI: true },
   { id: 'profg',       name: 'Prof G Media',             url: 'https://www.profgmedia.com/feed',                                           type: 'publication', tier: 2 },
   { id: 'platformer',  name: 'Platformer',               url: 'https://www.platformer.news/rss/',                                          type: 'publication', tier: 2 },
   { id: 'mittr',       name: 'MIT Tech Review',          url: 'https://www.technologyreview.com/topic/artificial-intelligence/feed',       type: 'publication', tier: 1 },
