@@ -18,7 +18,7 @@ document.head.appendChild(fontLink)
 const SUPABASE_URL = 'https://dgzzwgfpbnzyccfakobw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_u_n3MB-ozI8LgNJeS1IR6Q_5GQtv5ts'
 const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_KEY || ''
-const CACHE_KEY = 'firehose-cache-v11'
+const CACHE_KEY = 'firehose-cache-v12'
 const CACHE_TTL = 60 * 60 * 1000
 
 const SOURCES = [
@@ -26,6 +26,9 @@ const SOURCES = [
   { id: 'tut',         name: 'Time Under Tension',       url: 'https://timeundertension.substack.com/feed',                                type: 'substack',    tier: 3, alwaysAI: true },
   { id: 'ruben',       name: 'How to AI',                url: 'https://ruben.substack.com/feed',                                           type: 'substack',    tier: 3, alwaysAI: true },
   { id: 'aigov',       name: 'AI Governance',            url: 'https://aigovernancelead.substack.com/feed',                                type: 'substack',    tier: 3, alwaysAI: true },
+  { id: 'liminal',     name: 'L1M1NAL',                  url: 'https://l1m1nal.substack.com/feed',                                         type: 'substack',    tier: 2, alwaysAI: true },
+  { id: 'profg',       name: 'Prof G Media',             url: 'https://www.profgmedia.com/feed',                                           type: 'publication', tier: 2 },
+  { id: 'platformer',  name: 'Platformer',               url: 'https://www.platformer.news/rss/',                                          type: 'publication', tier: 2 },
   { id: 'mittr',       name: 'MIT Tech Review',          url: 'https://www.technologyreview.com/topic/artificial-intelligence/feed',       type: 'publication', tier: 1 },
   { id: 'adweek',      name: 'Adweek',                   url: 'https://www.adweek.com/category/artificial-intelligence/feed',              type: 'publication', tier: 2 },
   { id: 'drum',        name: 'The Drum',                 url: 'https://www.thedrum.com/rss/news',                                          type: 'publication', tier: 2 },
