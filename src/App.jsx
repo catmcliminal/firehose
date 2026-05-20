@@ -182,7 +182,29 @@ async function fetchFeed(source) {
       continue
     }
   }
-  return []
+  // Final fallback: rss2json — handles Cloudflare-protected feeds (e.g. Substack)
+  try {
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`)
+    const data = await res.json()
+    if (data.status !== 'ok' || !data.items?.length) return []
+    const maxItems = source.type === 'reddit' ? 5 : 10
+    return data.items.slice(0, maxItems).map((item) => {
+      const link = item.link || item.guid || ''
+      return {
+        id: link ? urlId(link) : `${source.id}-rss2json`,
+        title: decodeHtmlEntities(item.title || ''),
+        link,
+        pubDate: item.pubDate ? new Date(item.pubDate).getTime() : Date.now(),
+        description: cleanDescription(item.description || item.content || '', source.type).slice(0, 220),
+        source: source.name,
+        sourceType: source.type,
+        alwaysAI: source.alwaysAI || false,
+        categories: Array.isArray(item.categories) ? item.categories.map((c) => c.toLowerCase()) : [],
+        topics: [],
+        trending: 0,
+      }
+    }).filter((item) => item.title && item.link)
+  } catch (e) { return [] }
 }
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
