@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -394,6 +394,68 @@ function ScoreBar({ value, color, label }) {
         <div style={{ width: `${value}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.8s ease' }} />
       </div>
       <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 11, color, width: 28, textAlign: 'right', flexShrink: 0 }}>{value}</span>
+    </div>
+  )
+}
+
+function PulseBand() {
+  const svgRef = useRef(null)
+  const H = 48
+
+  function wavePath(w) {
+    const U = 340, b = H * 0.55, a = H * 0.40
+    const pat = [[0,0],[0.13,-0.20],[0.18,-0.12],[0.225,-0.24],[0.30,-1.0],[0.39,0.28],[0.48,-1.0],[0.57,-0.08],[0.64,-0.50],[0.86,-0.56],[1,0]]
+    let d = '', first = true
+    for (let x0 = -U * 0.2; x0 < w + U; x0 += U) {
+      for (let i = 0; i < pat.length; i++) {
+        const x = x0 + pat[i][0] * U, y = b + pat[i][1] * a
+        d += (first ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1); first = false
+      }
+    }
+    return d
+  }
+
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+    function build() {
+      const w = Math.max(svg.parentElement?.clientWidth || 320, 320)
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + H)
+      const d = wavePath(w)
+      svg.querySelectorAll('path').forEach(p => p.setAttribute('d', d))
+      const g = svg.querySelector('#firehose-pg')
+      if (g) g.setAttribute('x2', w)
+    }
+    build()
+    window.addEventListener('resize', build)
+    return () => window.removeEventListener('resize', build)
+  }, [])
+
+  return (
+    <div style={{ width: '100%', height: H, lineHeight: 0, overflow: 'hidden' }}>
+      <style>{`
+        @keyframes firehose-run { to { stroke-dashoffset: -100 } }
+        @media (prefers-reduced-motion: reduce) {
+          .fh-ecg-run, .fh-ecg-head { animation: none !important }
+          .fh-ecg-head { opacity: 0 !important }
+        }
+      `}</style>
+      <svg ref={svgRef} preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', width: '100%', height: '100%' }}>
+        <defs>
+          <linearGradient id="firehose-pg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="700" y2="0">
+            <stop offset="0" stopColor="#F0379A" />
+            <stop offset="0.28" stopColor="#F0531F" />
+            <stop offset="0.5" stopColor="#FFC21A" />
+            <stop offset="0.72" stopColor="#3D72F5" />
+            <stop offset="1" stopColor="#19A85B" />
+          </linearGradient>
+        </defs>
+        <path pathLength="100" d="" fill="none" stroke="url(#firehose-pg)" strokeWidth="1.5" opacity=".28" strokeLinecap="round" strokeLinejoin="round" />
+        <path className="fh-ecg-run" pathLength="100" d="" fill="none" stroke="url(#firehose-pg)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ strokeDasharray: '9 91', filter: 'drop-shadow(0 0 5px rgba(240,55,154,.9))', animation: 'firehose-run 5s linear infinite' }} />
+        <path className="fh-ecg-head" pathLength="100" d="" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+          style={{ strokeDasharray: '1.6 98.4', filter: 'drop-shadow(0 0 7px #fff) drop-shadow(0 0 12px #FFC21A)', animation: 'firehose-run 5s linear infinite' }} />
+      </svg>
     </div>
   )
 }
@@ -893,6 +955,9 @@ export default function App() {
           }}>✦ SUBMIT</button>
         </div>
       </div>
+
+      {/* PULSE BAND */}
+      <PulseBand />
 
       {/* TICKER */}
       <Ticker items={topTrending} />
