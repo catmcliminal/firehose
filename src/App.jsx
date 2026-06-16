@@ -598,11 +598,41 @@ function AboutModal({ onClose }) {
           </p>
         </div>
 
-        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginBottom: 20 }}>
           <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'Outfit', sans-serif" }}>ABOUT</div>
           <p style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6, margin: 0, fontFamily: "'Outfit', sans-serif" }}>
             Firehose is a product of <span style={{ color: T.text, fontWeight: 600 }}>humAIn</span> — a community for marketers and creatives navigating the AI shift. We cut through the hype so you can focus on what actually matters for your work.
           </p>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
+          <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 16, fontFamily: "'Outfit', sans-serif" }}>COMPANIES WHO'VE ATTENDED</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+            {[
+              'Adobe','Afterpay_Block','ALDI','ANZ','Arriba_Group','Asahi_Beverages',
+              'Australian_Broadcasting_Corporation','Australian_Centre_for_AI_in_Marketing',
+              'Australian_Radio_Network','Auto_and_General','Bank_of_Queensland_Group',
+              'Big_W','Budget_Direct','Cancer_Council','Canva','Capgemini','Coles',
+              'dentsu','Doohly','Envato','Finder','FOXTEL','FutureBrand','Kayo_Sport',
+              'KPMG_Australia','Leonardo_Ai','Lion','Microsoft','Nine','Ooh_media',
+              'Optus','Samsung','SBS','Scentre_Group_BrandSpace','Southern_Cross_Austereo',
+              'Springboards','TBWA_Melbourne','Thinkerbell','Virgin_Australia_Velocity','Weatherzone'
+            ].map(name => (
+              <div key={name} title={name.replace(/_/g, ' ')} style={{
+                width: 40, height: 40, borderRadius: 8,
+                background: '#1a1a1a', border: `1px solid ${T.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', flexShrink: 0,
+              }}>
+                <img
+                  src={`/logos/${name}.png`}
+                  alt={name.replace(/_/g, ' ')}
+                  style={{ width: 28, height: 28, objectFit: 'contain' }}
+                  onError={e => { e.target.style.display = 'none' }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
