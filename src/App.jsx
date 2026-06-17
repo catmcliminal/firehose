@@ -605,35 +605,6 @@ function AboutModal({ onClose }) {
           </p>
         </div>
 
-        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
-          <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.1em', marginBottom: 16, fontFamily: "'Outfit', sans-serif" }}>COMPANIES WHO'VE ATTENDED</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-            {[
-              'Adobe','Afterpay_Block','ALDI','ANZ','Arriba_Group','Asahi_Beverages',
-              'Australian_Broadcasting_Corporation','Australian_Centre_for_AI_in_Marketing',
-              'Australian_Radio_Network','Auto_and_General','Bank_of_Queensland_Group',
-              'Big_W','Budget_Direct','Cancer_Council','Canva','Capgemini','Coles',
-              'dentsu','Doohly','Envato','Finder','FOXTEL','FutureBrand','Kayo_Sport',
-              'KPMG_Australia','Leonardo_Ai','Lion','Microsoft','Nine','Ooh_media',
-              'Optus','Samsung','SBS','Scentre_Group_BrandSpace','Southern_Cross_Austereo',
-              'Springboards','TBWA_Melbourne','Thinkerbell','Virgin_Australia_Velocity','Weatherzone'
-            ].map(name => (
-              <div key={name} title={name.replace(/_/g, ' ')} style={{
-                width: 40, height: 40, borderRadius: 8,
-                background: '#1a1a1a', border: `1px solid ${T.border}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden', flexShrink: 0,
-              }}>
-                <img
-                  src={`/logos/${name}.png`}
-                  alt={name.replace(/_/g, ' ')}
-                  style={{ width: 28, height: 28, objectFit: 'contain' }}
-                  onError={e => { e.target.style.display = 'none' }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -991,6 +962,45 @@ export default function App() {
 
       {/* TICKER */}
       <Ticker items={topTrending} />
+
+      {/* PREVIOUS ATTENDEES */}
+      <div style={{ borderBottom: `1px solid ${T.border}`, padding: '20px 32px', background: '#0a0a0a' }}>
+        <div style={{ color: T.textMuted, fontSize: 10, letterSpacing: '0.12em', marginBottom: 14, fontFamily: "'Outfit', sans-serif" }}>PREVIOUS ATTENDEES</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+          {[
+            ['Adobe','adobe.com'],['Afterpay_Block','afterpay.com'],['ALDI','aldi.com.au'],
+            ['ANZ','anz.com.au'],['Arriba_Group','arribagroup.com.au'],['Asahi_Beverages','asahibeverages.com'],
+            ['Australian_Broadcasting_Corporation','abc.net.au'],['Australian_Centre_for_AI_in_Marketing','acam.ai'],
+            ['Australian_Radio_Network','arn.com.au'],['Auto_and_General','autogeneral.com.au'],
+            ['Bank_of_Queensland_Group','boq.com.au'],['Big_W','bigw.com.au'],
+            ['Budget_Direct','budgetdirect.com.au'],['Cancer_Council','cancercouncil.com.au'],
+            ['Canva','canva.com'],['Capgemini','capgemini.com'],['Coles','coles.com.au'],
+            ['dentsu','dentsu.com'],['Doohly','doohly.com'],['Envato','envato.com'],
+            ['Finder','finder.com.au'],['FOXTEL','foxtel.com.au'],['FutureBrand','futurebrand.com'],
+            ['Kayo_Sport','kayosports.com.au'],['KPMG_Australia','kpmg.com.au'],
+            ['Leonardo_Ai','leonardo.ai'],['Lion','lionco.com'],['Microsoft','microsoft.com'],
+            ['Nine','nine.com.au'],['Ooh_media','oohmedia.com.au'],['Optus','optus.com.au'],
+            ['Samsung','samsung.com'],['SBS','sbs.com.au'],['Scentre_Group_BrandSpace','scentregroup.com'],
+            ['Southern_Cross_Austereo','southerncrossaustereo.com.au'],['Springboards','springboards.ai'],
+            ['TBWA_Melbourne','tbwa.com'],['Thinkerbell','thinkerbell.com'],
+            ['Virgin_Australia_Velocity','virginaustralia.com'],['Weatherzone','weatherzone.com.au'],
+          ].map(([name, domain]) => (
+            <div key={name} title={name.replace(/_/g, ' ')} style={{
+              width: 48, height: 48, borderRadius: 10,
+              background: '#fff', border: `1px solid #2a2a2a`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', flexShrink: 0,
+            }}>
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                alt={name.replace(/_/g, ' ')}
+                style={{ width: 32, height: 32, objectFit: 'contain' }}
+                onError={e => { e.target.style.display = 'none' }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
 
